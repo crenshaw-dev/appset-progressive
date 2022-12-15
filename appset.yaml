@@ -1,0 +1,83 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: guestbook
+spec:
+  generators:
+  - list:
+      elements:
+      - cluster: engineering-dev
+        url: https://kubernetes.default.svc
+        env: env-a
+      - cluster: engineering-qa
+        url: https://kubernetes.default.svc
+        env: env-b
+      - cluster: engineering-prod
+        url: https://kubernetes.default.svc
+        env: env-c
+      - cluster: engineering-dev
+        url: https://kubernetes.default.svc
+        env: env-d
+      - cluster: engineering-qa
+        url: https://kubernetes.default.svc
+        env: env-e
+      - cluster: engineering-prod
+        url: https://kubernetes.default.svc
+        env: env-f
+  strategy:
+    type: RollingSync
+    rollingSync:
+      steps:
+        - matchExpressions:
+            - key: env
+              operator: In
+              values:
+                - env-a
+        - matchExpressions:
+            - key: env
+              operator: In
+              values:
+                - env-b
+        - matchExpressions:
+            - key: env
+              operator: In
+              values:
+                - env-c
+        - matchExpressions:
+            - key: env
+              operator: In
+              values:
+                - env-d
+        - matchExpressions:
+            - key: env
+              operator: In
+              values:
+                - env-e
+        - matchExpressions:
+            - key: env
+              operator: In
+              values:
+                - env-f
+  template:
+    metadata:
+      name: '{{env}}-guestbook'
+      labels:
+        env: '{{env}}'
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/argoproj/argocd-example-apps.git
+        targetRevision: HEAD
+        path: helm-guestbook
+        helm:
+          releaseName: "{{env}}-test"
+          values: |
+            replicaCount: 1
+      destination:
+        server: '{{url}}'
+        namespace: default
+      syncPolicy:
+        automated:
+          prune: true
+        syncOptions:
+          - Prune=true
