@@ -64,7 +64,7 @@ spec:
         helm:
           releaseName: "{{env}}-test"
           values: |
-            replicaCount: 1
+            replicaCount: 2
       destination:
         server: '{{url}}'
         namespace: default
